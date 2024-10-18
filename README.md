@@ -1,4 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Qwen 2.5 Code Interpreter
+
+![](./qwen.png)
+
+Powered by [Qwen](https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B), [WebLLM](https://github.com/mlc-ai/web-llm), and [Pyodide](https://github.com/pyodide/pyodide).
 
 ## Getting Started
 
