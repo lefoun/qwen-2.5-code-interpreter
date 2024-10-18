@@ -23,6 +23,7 @@ export default function Home() {
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [codeOutput, setCodeOutput] = useState<string | null>(null);
 
   useEffect(() => {
     setProgressCallback((progress: string) => {
@@ -57,6 +58,7 @@ export default function Home() {
     setIsStreaming(true);
     setResult("");
     setResultWithExplanation("");
+    setCodeOutput(null);
     setHasError(false);
 
     const messages = [
@@ -89,15 +91,15 @@ export default function Home() {
               const { results, error }: PyodideResult = await runPython(extractedCode);
               if (error) {
                 setHasError(true);
-                setResult((prevResult) => `${prevResult}\n\nExecution Error:\n${error}`);
+                setCodeOutput(`Execution Error:\n${error}`);
               } else if (results) {
-                console.log("Results:", results);
+                setCodeOutput(`Output:\n${results.stdout}\nResult: ${results.result}`);
 
                 // Feed result back to LLM for explanation
                 const explanationMessages = [
                   ...messages,
                   { role: "assistant", content: finalMessage },
-                  { role: "user", content: `I ran your Python code which returned ${results.result} and the printed output: ${results.stdout}.\n You should use the result and the printed output to answer the users question.` },
+                  { role: "user", content: `I ran your Python code which returned ${results.result} and the printed output: ${results.stdout}.\n You should use the result and the printed output to answer the users question. No need to explain the code, just use the results to answer the question.` },
                 ];
 
                 console.log("Explanation Messages:", explanationMessages);
@@ -118,9 +120,7 @@ export default function Home() {
               }
             } catch (err) {
               setHasError(true);
-              setResult((prevResult) => 
-                `${prevResult}\n\nExecution Error:\n${(err as Error).message}`
-              );
+              setCodeOutput(`Execution Error:\n${(err as Error).message}`);
             }
           }
         },
@@ -204,8 +204,14 @@ export default function Home() {
             <pre className="text-emerald-100 whitespace-pre-wrap">{result}</pre>
           </div>
         )}
+        {codeOutput && (
+          <div className="bg-teal-800 p-4 w-full max-w-2xl overflow-auto border-t border-teal-700">
+            <h3 className="text-teal-200 font-semibold mb-2">Code Output:</h3>
+            <pre className="text-teal-50 whitespace-pre-wrap text-sm font-mono bg-teal-900 p-3 rounded">{codeOutput}</pre>
+          </div>
+        )}
         {resultWithExplanation && (
-          <div className="bg-emerald-700 p-4 rounded-b w-full max-w-2xl overflow-auto border-t border-emerald-600 font-bold">
+          <div className="bg-emerald-700 p-4 rounded-b w-full max-w-2xl overflow-auto border-t border-emerald-600">
             <h3 className="text-emerald-200 font-semibold mb-2">Explanation:</h3>
             <pre className="text-emerald-50 whitespace-pre-wrap text-sm">{resultWithExplanation}</pre>
           </div>
