@@ -1,3 +1,12 @@
+---
+title: Qwen 2.5 Code Interpreter
+emoji: 🐍
+colorFrom: gray
+colorTo: purple
+sdk: static
+pinned: true
+---
+
 # Qwen 2.5 Code Interpreter
 
 ![](./qwen.png)

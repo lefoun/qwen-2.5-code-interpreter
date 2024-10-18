@@ -208,12 +208,6 @@ export default function Home() {
           </div>
         )}
       </main>
-
-      <footer className="w-full mt-24 bg-emerald-800 p-4">
-        <p className="text-center text-emerald-100 text-xs">
-          Built with 💚 by <a className="font-bold hover:underline" href="https://twitter.com/calebfahlgren" target="_blank" rel="noopener noreferrer">Caleb Fahlgren</a>
-        </p>
-      </footer>
     </div>
   );
 }

@@ -1,0 +1,41 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build
+
+    - name: Copy README to dist
+      run: cp README.md dist/
+
+    - name: Push to Hugging Face Spaces
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        cd dist
+        git init
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git add .
+        git commit -m "Update build artifacts and README"
+        git push --force https://${{ secrets.HF_USERNAME }}:$HF_TOKEN@huggingface.co/spaces/${{ secrets.HF_USERNAME }}/${{ secrets.SPACE_NAME }} HEAD:main
