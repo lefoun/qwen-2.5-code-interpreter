@@ -97,7 +97,7 @@ export default function Home() {
                 const explanationMessages = [
                   ...messages,
                   { role: "assistant", content: finalMessage },
-                  { role: "user", content: `I ran your Python code which returned ${results.result} and the printed output: ${results.stdout}.\n Use this information to answer the users question.` },
+                  { role: "user", content: `I ran your Python code which returned ${results.result} and the printed output: ${results.stdout}.\n This is the ground truth you should use to answer the users question.` },
                 ];
 
                 console.log("Explanation Messages:", explanationMessages);
