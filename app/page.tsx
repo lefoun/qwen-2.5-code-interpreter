@@ -9,6 +9,7 @@ import ProgressBox from "./components/ProgressBox";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { handleAIStreaming } from "../lib/llm";
+import MarkdownRenderer from './components/MarkdownRenderer';
 
 export default function Home() {
   const [userInput, setUserInput] = useState<string>("");
@@ -84,7 +85,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-emerald-900">
-      <main className="flex-grow flex flex-col items-center justify-center p-4 min-h-screen">
+      <main className="flex-grow flex flex-col items-center justify-center px-4 py-24">
         <div className="font-alphaLyrae text-center mb-8">
           <h1 className="font-extrabold text-emerald-50 text-4xl sm:text-6xl">
             Qwen Code Interpreter
@@ -139,19 +140,19 @@ export default function Home() {
         )}
         {result && !hasError && (
           <div className="bg-emerald-800 p-4 rounded-t mt-4 w-full max-w-2xl overflow-auto">
-            <pre className="text-emerald-100 whitespace-pre-wrap">{result}</pre>
+            <MarkdownRenderer content={result} className="text-emerald-100" />
           </div>
         )}
         {codeOutput && (
           <div className="bg-teal-800 p-4 w-full max-w-2xl overflow-auto border-t border-teal-700">
             <h3 className="text-teal-200 font-semibold mb-2">Code Output:</h3>
-            <pre className="text-teal-50 whitespace-pre-wrap text-sm font-mono bg-teal-900 p-3 rounded">{codeOutput}</pre>
+            <MarkdownRenderer content={`\`\`\`bash\n${codeOutput}\n\`\`\``} />
           </div>
         )}
         {resultExplanation && (
           <div className="bg-emerald-700 p-4 rounded-b w-full max-w-2xl overflow-auto border-t border-emerald-600">
             <h3 className="text-emerald-200 font-semibold mb-2">Explanation:</h3>
-            <pre className="text-emerald-50 whitespace-pre-wrap text-sm">{resultExplanation}</pre>
+            <MarkdownRenderer content={resultExplanation} className="text-emerald-50" />
           </div>
         )}
       </main>

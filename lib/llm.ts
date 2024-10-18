@@ -5,6 +5,13 @@ import { extractCodeFromMarkdown } from "./markdownParser";
 let engine: webllm.MLCEngine | null = null;
 let progressCallback: ((progress: string) => void) | null = null;
 
+
+export interface Message {
+  content: string;
+  role: "system" | "user" | "assistant";
+}
+
+
 export async function initializeWebLLMEngine(
   selectedModel: string,
   temperature: number,
