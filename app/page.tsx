@@ -11,6 +11,7 @@ import { streamingGenerating } from "../lib/llm";
 import { Message } from "../types/llm";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PyodideResult } from "./hooks/usePyodide";
 
 export default function Home() {
   const [code, setCode] = useState<string>("");
@@ -85,19 +86,21 @@ export default function Home() {
           const extractedCode = extractCodeFromMarkdown(finalMessage);
           if (extractedCode) {
             try {
-              const { results, error } = await runPython(extractedCode);
+              const { results, error }: PyodideResult = await runPython(extractedCode);
               if (error) {
                 setHasError(true);
                 setResult((prevResult) => `${prevResult}\n\nExecution Error:\n${error}`);
-              } else {
-                const executionResult = JSON.stringify(results, null, 2);
+              } else if (results) {
+                console.log("Results:", results);
 
                 // Feed result back to LLM for explanation
                 const explanationMessages = [
                   ...messages,
                   { role: "assistant", content: finalMessage },
-                  { role: "user", content: `The code execution result is:\n${executionResult}\nPlease explain this result in simple terms.` },
+                  { role: "user", content: `I ran your Python code which returned ${results.result} and the printed output: ${results.stdout}.\n Use this information to answer the users question.` },
                 ];
+
+                console.log("Explanation Messages:", explanationMessages);
 
                 await streamingGenerating(
                   explanationMessages as Message[],

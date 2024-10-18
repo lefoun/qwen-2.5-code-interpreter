@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 
-interface PyodideResult {
-  results: unknown;
+export interface PyodideResult {
+  results: {
+    stdout: string;
+    result: unknown;
+  } | null;
   error: string | null;
 }
 
