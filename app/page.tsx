@@ -9,11 +9,11 @@ import { extractCodeFromMarkdown } from "../lib/markdownParser";
 import ProgressBox from "./components/ProgressBox";
 import { streamingGenerating } from "../lib/llm";
 import { Message } from "../types/llm";
-import FAQ from "./components/FAQ";
 
 export default function Home() {
   const [code, setCode] = useState<string>("");
   const [result, setResult] = useState<string | null>(null);
+  const [resultWithExplanation, setResultWithExplanation] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const { runPython, isLoading } = usePyodide();
@@ -47,37 +47,22 @@ export default function Home() {
     }
   };
 
-  const handleRunPython = async () => {
-    setResult(null);
-    setHasError(false);
-
-    try {
-      const { results, error } = await runPython(code);
-      if (error) {
-        setHasError(true);
-        setResult(error);
-      } else {
-        setResult(JSON.stringify(results, null, 2));
-      }
-    } catch (err) {
-      setHasError(true);
-      setResult((err as Error).message);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isModelLoaded || isStreaming) return;
 
     setIsStreaming(true);
     setResult("");
+    setResultWithExplanation("");
     setHasError(false);
 
     const messages = [
       {
         role: "system",
         content:
-          "The user will ask you a tricky question, your job is to write Python code to answer the question. Respond with a markdown code block starting with ```python and ``` at the end. Make sure the code can be executed without any changes.",
+          "The user will ask you a tricky question, your job is to write Python code to answer the question. \n\n" +
+          "Really think step by step before writing any code to ensure you're answering the question correctly. \n\n" +
+          "Respond with a markdown code block starting with ```python and ``` at the end. Make sure the code can be executed without any changes.",
       },
       {
         role: "user",
@@ -86,35 +71,50 @@ export default function Home() {
     ];
 
     try {
-      let aiResponse = "";
       await streamingGenerating(
         messages as Message[],
         (currentMessage) => {
-          aiResponse = currentMessage;
           setResult(currentMessage);
         },
         async (finalMessage: string, usage: unknown) => {
-          aiResponse = finalMessage;
           setResult(finalMessage);
           console.log("Usage:", usage);
 
-          // Extract Python code from the AI's response
           const extractedCode = extractCodeFromMarkdown(finalMessage);
           if (extractedCode) {
             try {
               const { results, error } = await runPython(extractedCode);
               if (error) {
                 setHasError(true);
-                setResult(`${aiResponse}\n\nExecution Error:\n${error}`);
+                setResult((prevResult) => `${prevResult}\n\nExecution Error:\n${error}`);
               } else {
-                setResult(
-                  `${aiResponse}\n\nExecution Result:\n${JSON.stringify(results, null, 2)}`,
+                const executionResult = JSON.stringify(results, null, 2);
+
+                // Feed result back to LLM for explanation
+                const explanationMessages = [
+                  ...messages,
+                  { role: "assistant", content: finalMessage },
+                  { role: "user", content: `The code execution result is:\n${executionResult}\nPlease explain this result in simple terms.` },
+                ];
+
+                await streamingGenerating(
+                  explanationMessages as Message[],
+                  (currentExplanation) => {
+                    setResultWithExplanation(currentExplanation);
+                  },
+                  (finalExplanation: string) => {
+                    setResultWithExplanation(finalExplanation);
+                  },
+                  (error: Error) => {
+                    setHasError(true);
+                    setResultWithExplanation(`Error generating explanation: ${error.message}`);
+                  }
                 );
               }
             } catch (err) {
               setHasError(true);
-              setResult(
-                `${aiResponse}\n\nExecution Error:\n${(err as Error).message}`,
+              setResult((prevResult) => 
+                `${prevResult}\n\nExecution Error:\n${(err as Error).message}`
               );
             }
           }
@@ -147,7 +147,7 @@ export default function Home() {
             Qwen Code Interpreter
           </h1>
           <p className="text-emerald-200 text-xl sm:text-2xl mt-4">
-            <TypingAnimation text="Qwen-2.5-Coder with access to an in-browser code interpreter." />
+            <TypingAnimation speed={60} text="Qwen-2.5-Coder 1.5B with access to an in-browser code interpreter." />
           </p>
         </div>
 
@@ -214,20 +214,23 @@ export default function Home() {
           </div>
         )}
         {result && !hasError && (
-          <div className="bg-emerald-800 p-4 rounded mt-4 w-full max-w-2xl overflow-auto">
+          <div className="bg-emerald-800 p-4 rounded-t mt-4 w-full max-w-2xl overflow-auto">
             <pre className="text-emerald-100 whitespace-pre-wrap">{result}</pre>
+          </div>
+        )}
+        {resultWithExplanation && (
+          <div className="bg-emerald-700 p-4 rounded-b w-full max-w-2xl overflow-auto border-t border-emerald-600 font-bold">
+            <h3 className="text-emerald-200 font-semibold mb-2">Explanation:</h3>
+            <pre className="text-emerald-50 whitespace-pre-wrap text-sm">{resultWithExplanation}</pre>
           </div>
         )}
       </main>
 
-      <section className="w-full bg-emerald-800 p-4 mt-auto">
-        <div className="max-w-2xl mx-auto py-8 px-4">
-          <FAQ />
-        </div>
+      <footer className="w-full mt-24 bg-emerald-800 p-4">
         <p className="text-center text-emerald-100 text-xs">
-          Built with 💚 by <a className="font-bold hover:underline" href="https://twitter.com/calebfahlgren" target="_blank">Caleb Fahlgren</a>
+          Built with 💚 by <a className="font-bold hover:underline" href="https://twitter.com/calebfahlgren" target="_blank" rel="noopener noreferrer">Caleb Fahlgren</a>
         </p>
-      </section>
+      </footer>
     </div>
   );
 }
