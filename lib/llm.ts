@@ -93,6 +93,7 @@ export interface StreamingCallbacks {
   onCodeOutputUpdate: (output: string | null) => void;
   onExplanationUpdate: (explanation: string | null) => void;
   onErrorUpdate: (hasError: boolean) => void;
+  onUsageUpdate: (usage: webllm.CompletionUsage) => void;
 }
 
 export async function handleAIStreaming(
@@ -120,8 +121,9 @@ export async function handleAIStreaming(
       (currentMessage) => {
         callbacks.onResultUpdate(currentMessage);
       },
-      async (finalMessage: string, usage: unknown) => {
+      async (finalMessage: string, usage: webllm.CompletionUsage) => {
         callbacks.onResultUpdate(finalMessage);
+        callbacks.onUsageUpdate(usage);
         console.log("Usage:", usage);
 
         const extractedCode = extractCodeFromMarkdown(finalMessage);
@@ -148,8 +150,9 @@ export async function handleAIStreaming(
                 (currentExplanation) => {
                   callbacks.onExplanationUpdate(currentExplanation);
                 },
-                (finalExplanation: string) => {
+                (finalExplanation: string, explanationUsage: webllm.CompletionUsage) => {
                   callbacks.onExplanationUpdate(finalExplanation);
+                  callbacks.onUsageUpdate(explanationUsage);
                 },
                 (error: Error) => {
                   callbacks.onErrorUpdate(true);

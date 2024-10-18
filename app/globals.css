@@ -76,3 +76,13 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+::selection {
+  background-color: #34d399; /* emerald-400 */
+  color: #064e3b; /* emerald-900 */
+}
+
+::-moz-selection {
+  background-color: #34d399; /* emerald-400 */
+  color: #064e3b; /* emerald-900 */
+}

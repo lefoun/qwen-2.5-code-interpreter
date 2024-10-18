@@ -19,17 +19,21 @@ interface CodeBlockProps {
   language: string;
   value: string;
 }
-
 const CodeBlock: React.FC<CodeBlockProps> = ({ language, value }) => {
   return (
-    <SyntaxHighlighter 
-      language={language} 
-      style={oneDark} 
-      showLineNumbers={true}
-      className="rounded text-xs overflow-x-auto"
-    >
-      {value}
-    </SyntaxHighlighter>
+    <div className="relative group">
+      <div className="absolute top-0 right-0 bg-emerald-700 text-emerald-50 rounded-bl px-1.5 py-0.5 text-[10px] font-mono tracking-wide opacity-70 transition-opacity group-hover:opacity-100">
+        {language}
+      </div>
+      <SyntaxHighlighter 
+        language={language} 
+        style={oneDark} 
+        showLineNumbers={true}
+        className="rounded-md text-xs overflow-x-auto pt-5"
+      >
+        {value}
+      </SyntaxHighlighter>
+    </div>
   );
 };
 
@@ -52,7 +56,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
           {...props}
         />
       ) : (
-        <code className="px-1 py-0.5 rounded bg-emerald-800 text-emerald-100 border border-emerald-600" {...props}>
+        <code className="px-1 py-0.5 rounded bg-emerald-700 text-emerald-100 text-xs" {...props}>
           {children}
         </code>
       );
@@ -60,7 +64,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
   };
 
   return (
-    <div className={`prose prose-invert max-w-none ${className || ''}`}>
+    <div className={`prose prose-sm prose-invert max-w-none ${className || ''}`}>
       <ReactMarkdown
         components={components}
         remarkPlugins={[remarkMath]}

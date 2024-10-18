@@ -10,9 +10,10 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { handleAIStreaming } from "../lib/llm";
 import MarkdownRenderer from './components/MarkdownRenderer';
+import { CompletionUsage } from "@mlc-ai/web-llm";
 
 export default function Home() {
-  const [userInput, setUserInput] = useState<string>("");
+  const [userInput, setUserInput] = useState('');
   const [result, setResult] = useState<string | null>(null);
   const [resultExplanation, setResultExplanation] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
@@ -22,6 +23,7 @@ export default function Home() {
   const [loadingProgress, setLoadingProgress] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [codeOutput, setCodeOutput] = useState<string | null>(null);
+  const [usage, setUsage] = useState<CompletionUsage | null>(null);
 
   useEffect(() => {
     setProgressCallback(setLoadingProgress);
@@ -56,6 +58,7 @@ export default function Home() {
     setResultExplanation("");
     setCodeOutput(null);
     setHasError(false);
+    setUsage(null);
 
     try {
       await handleAIStreaming(
@@ -66,6 +69,7 @@ export default function Home() {
           onCodeOutputUpdate: setCodeOutput,
           onExplanationUpdate: setResultExplanation,
           onErrorUpdate: setHasError,
+          onUsageUpdate: setUsage,
         }
       );
     } catch (err) {
@@ -81,6 +85,10 @@ export default function Home() {
       e.preventDefault();
       handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
     }
+  };
+
+  const formatTokensPerSecond = (value: number) => {
+    return value.toFixed(2);
   };
 
   return (
@@ -146,12 +154,19 @@ export default function Home() {
         {codeOutput && (
           <div className="bg-teal-800 p-4 w-full max-w-2xl overflow-auto border-t border-teal-700">
             <h3 className="text-teal-200 font-semibold mb-2">Code Output:</h3>
-            <MarkdownRenderer content={`\`\`\`bash\n${codeOutput}\n\`\`\``} />
+            <MarkdownRenderer content={`\`\`\`output\n${codeOutput}\n\`\`\``} />
           </div>
         )}
         {resultExplanation && (
           <div className="bg-emerald-700 p-4 rounded-b w-full max-w-2xl overflow-auto border-t border-emerald-600">
-            <h3 className="text-emerald-200 font-semibold mb-2">Explanation:</h3>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-emerald-200 font-semibold">Explanation:</h3>
+              {usage && (
+                <div className="bg-emerald-600 text-emerald-50 rounded px-1.5 py-0.5 text-xs font-mono tracking-wide">
+                  {formatTokensPerSecond(usage.extra.decode_tokens_per_s)} tok/s
+                </div>
+              )}
+            </div>
             <MarkdownRenderer content={resultExplanation} className="text-emerald-50" />
           </div>
         )}
