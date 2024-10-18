@@ -1,13 +1,16 @@
-'use client'
-import React, { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect } from "react";
 
 interface TypingAnimationProps {
   text: string;
   speed?: number;
 }
 
-const TypingAnimation: React.FC<TypingAnimationProps> = ({ text, speed = 50 }) => {
-  const [displayedText, setDisplayedText] = useState('');
+const TypingAnimation: React.FC<TypingAnimationProps> = ({
+  text,
+  speed = 50,
+}) => {
+  const [displayedText, setDisplayedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
   useEffect(() => {

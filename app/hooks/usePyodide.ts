@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface PyodideResult {
   results: unknown;
@@ -10,7 +10,9 @@ export function usePyodide() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const pyodideWorker = new Worker(new URL('../workers/pyodideWorker.ts', import.meta.url));
+    const pyodideWorker = new Worker(
+      new URL("../workers/pyodideWorker.ts", import.meta.url),
+    );
     setWorker(pyodideWorker);
 
     return () => {
@@ -18,34 +20,37 @@ export function usePyodide() {
     };
   }, []);
 
-  const runPython = useCallback((code: string): Promise<PyodideResult> => {
-    return new Promise((resolve, reject) => {
-      if (!worker) {
-        reject(new Error('Worker not initialized'));
-        return;
-      }
-
-      setIsLoading(true);
-
-      const messageId = Date.now().toString();
-
-      const messageHandler = (event: MessageEvent) => {
-        if (event.data.id === messageId) {
-          setIsLoading(false);
-          worker.removeEventListener('message', messageHandler);
-
-          if (event.data.results) {
-            resolve({ results: event.data.results, error: null });
-          } else if (event.data.error) {
-            resolve({ results: null, error: event.data.error });
-          }
+  const runPython = useCallback(
+    (code: string): Promise<PyodideResult> => {
+      return new Promise((resolve, reject) => {
+        if (!worker) {
+          reject(new Error("Worker not initialized"));
+          return;
         }
-      };
 
-      worker.addEventListener('message', messageHandler);
-      worker.postMessage({ id: messageId, python: code });
-    });
-  }, [worker]);
+        setIsLoading(true);
+
+        const messageId = Date.now().toString();
+
+        const messageHandler = (event: MessageEvent) => {
+          if (event.data.id === messageId) {
+            setIsLoading(false);
+            worker.removeEventListener("message", messageHandler);
+
+            if (event.data.results) {
+              resolve({ results: event.data.results, error: null });
+            } else if (event.data.error) {
+              resolve({ results: null, error: event.data.error });
+            }
+          }
+        };
+
+        worker.addEventListener("message", messageHandler);
+        worker.postMessage({ id: messageId, python: code });
+      });
+    },
+    [worker],
+  );
 
   return { runPython, isLoading };
 }

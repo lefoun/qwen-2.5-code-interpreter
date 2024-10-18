@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { PyodideInterface } from 'pyodide';
+import { PyodideInterface } from "pyodide";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -20,23 +20,25 @@ interface WorkerResponse {
   error?: string;
 }
 
-self.addEventListener('message', async (event: MessageEvent<WorkerMessage>) => {
+self.addEventListener("message", async (event: MessageEvent<WorkerMessage>) => {
   const { id, python } = event.data;
 
   if (!pyodide) {
-    self.importScripts('https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js');
+    self.importScripts(
+      "https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js",
+    );
 
     // @ts-expect-error - to be fixed
-    pyodide = await (self).loadPyodide();
+    pyodide = await self.loadPyodide();
 
     if (pyodide) {
-      await pyodide.loadPackage('numpy');
-      await pyodide.loadPackage('pandas');
+      await pyodide.loadPackage("numpy");
+      await pyodide.loadPackage("pandas");
     }
   }
 
   if (!pyodide) {
-    throw new Error('Failed to initialize Pyodide');
+    throw new Error("Failed to initialize Pyodide");
   }
 
   try {
@@ -47,7 +49,7 @@ self.addEventListener('message', async (event: MessageEvent<WorkerMessage>) => {
     `);
 
     const result = await pyodide.runPythonAsync(python);
-    
+
     // Capture stdout content
     const stdout = pyodide.runPython("sys.stdout.getvalue()");
 
@@ -58,9 +60,14 @@ self.addEventListener('message', async (event: MessageEvent<WorkerMessage>) => {
     let jsonSafeResult;
     if (result !== undefined && result !== null) {
       try {
-        jsonSafeResult = pyodide.toPy(result).toJs({ dict_converter: Object.fromEntries });
+        jsonSafeResult = pyodide
+          .toPy(result)
+          .toJs({ dict_converter: Object.fromEntries });
       } catch (conversionError) {
-        console.warn('Failed to convert result to JSON-safe format:', conversionError);
+        console.warn(
+          "Failed to convert result to JSON-safe format:",
+          conversionError,
+        );
         jsonSafeResult = String(result);
       }
     } else {
@@ -71,15 +78,15 @@ self.addEventListener('message', async (event: MessageEvent<WorkerMessage>) => {
       id,
       results: {
         stdout,
-        result: jsonSafeResult
-      }
+        result: jsonSafeResult,
+      },
     };
 
     self.postMessage(response);
   } catch (error) {
     const errorResponse: WorkerResponse = {
       id,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     };
     self.postMessage(errorResponse);
   }
