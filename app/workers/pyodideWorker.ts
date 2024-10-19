@@ -9,6 +9,7 @@ let pyodide: PyodideInterface | null = null;
 interface WorkerMessage {
   id: string;
   python: string;
+  packages: string[];
 }
 
 interface WorkerResponse {
@@ -21,7 +22,7 @@ interface WorkerResponse {
 }
 
 self.addEventListener("message", async (event: MessageEvent<WorkerMessage>) => {
-  const { id, python } = event.data;
+  const { id, python, packages } = event.data;
 
   if (!pyodide) {
     self.importScripts(
@@ -34,6 +35,15 @@ self.addEventListener("message", async (event: MessageEvent<WorkerMessage>) => {
     if (pyodide) {
       await pyodide.loadPackage("numpy");
       await pyodide.loadPackage("pandas");
+      if (packages.length > 0) {
+        try {
+          await pyodide.loadPackage(packages);
+        } catch (e) {
+          console.error(
+            `Failed to load the required packages ${packages}. The code may fail to run. ${e}`
+          );
+        }
+      }
     }
   }
 

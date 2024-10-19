@@ -1,6 +1,9 @@
 import * as webllm from "@mlc-ai/web-llm";
 import { PyodideResult } from "../app/hooks/usePyodide";
-import { extractCodeFromMarkdown } from "./markdownParser";
+import {
+  extractCodeFromMarkdown,
+  extractPackagesFromCode
+} from "./markdownParser";
 
 let engine: webllm.MLCEngine | null = null;
 let progressCallback: ((progress: string) => void) | null = null;
@@ -98,7 +101,7 @@ export interface StreamingCallbacks {
 
 export async function handleAIStreaming(
   code: string,
-  runPython: (code: string) => Promise<PyodideResult>,
+  runPython: (code: string, imports: string[]) => Promise<PyodideResult>,
   callbacks: StreamingCallbacks
 ): Promise<void> {
   const messages = [
@@ -129,7 +132,11 @@ export async function handleAIStreaming(
         const extractedCode = extractCodeFromMarkdown(finalMessage);
         if (extractedCode) {
           try {
-            const { results, error }: PyodideResult = await runPython(extractedCode);
+            const packages = extractPackagesFromCode(extractedCode);
+            const { results, error }: PyodideResult = await runPython(
+              extractedCode,
+              packages
+            );
             if (error) {
               callbacks.onErrorUpdate(true);
               callbacks.onCodeOutputUpdate(`Execution Error:\n${error}`);
